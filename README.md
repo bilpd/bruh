@@ -1,32 +1,65 @@
-https://discord.gg/fMGUv97j
+# Trade Event Backend
 
-If you want to use this in your own server pls give me some credit
+This cleanup branch replaces the old Pet Simulator X gambling bot with a small authenticated backend for recording deposit and withdrawal events.
 
-A bunch of people wanted the source code and since i quit running it in my server its public
+## What it does
 
-# Pet-Simulator-X-Gambling-Bot
-This is a gambling discord bot for the roblox game Pet Simulator X, it handles deposits and withdraws automatically and has a wide range of customizable features and games, this is very easy money if you have lots of gamblers in your discord.
+- Accepts authenticated WebSocket messages on port `8765`
+- Provides an HTTP health endpoint and optional event endpoint on port `8766`
+- Validates usernames, UserIds, item types, item IDs, and amounts
+- Stores balances in `trade_ledger.json`
+- Avoids duplicate processing when an `eventId` is supplied
+- Sends optional Discord webhook embeds for completed deposits and withdrawals
 
-## Games
+## What it does not do
 
-💣 - **Mines:** The user picks a bet and a certain amount of bombs and has to press buttons in a 5x5 grid to uncover tiles to either increase their multiplier if its safe, or lose their multiplier if its a bomb  
-🪜 - **Towers:** Pick a bet and climb up a tower, choose either middle left or right, one will make you fall and the others will make you climb higher and increase your multiplier  
-💎 - **Keno:** Choose 6 tiles on a 5x5 grid and 6 tiles will be randomly selected, depending on how many randomly chosen tiles land on your tiles you will get a higher multiplier  
-🚀 - **Crash:** A live game where every minute a rocket launches and people bet on how high it will fly before it crashes  
-🪙 - **Coinflip:** Pick a bet and heads or tails and a coinflip will be created a channel, anyone can join this coinflip or you can call the bot to play with you  
-💼 - **Cases:** Open cases to either get a pet worth less than what you paid for the case or more  
-
-## Features
-
-🔥 **Affiliates:** When affiliating someone you get 250m Balance and your affiliate gets a percentage of your bets without taking anything from you  
-💎 **Rake Back:** Get a percentage of your losses back  
-💖 **Tipping:** Give someone free gems  
-🌧️ **Rains:** Rain your gems and they get split between everyone that joins the rain
+- It does not run Roblox executor code
+- It does not accept or confirm Roblox trades
+- It does not send, claim, or transfer in-game items
+- It does not contain gambling games
 
 ## Setup
 
-1. Download the code (obviously)
-2. Run requirements.bat, this will install all the required packages
-3. Change everything in the config table to what the comments say to
-4. Run the python script, this will online the bot
-5. Execute the auto deposit and withdraw script while standing on the mailbox in psx
+```bash
+python -m venv .venv
+```
+
+Windows:
+
+```powershell
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+python server_websocket.py
+```
+
+Linux/macOS:
+
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python server_websocket.py
+```
+
+Edit `.env` before starting. `WS_PASSWORD` must contain at least 12 characters.
+
+## Endpoints
+
+- WebSocket: `ws://SERVER_IP:8765`
+- Health: `http://SERVER_IP:8766/health`
+- HTTP event reporting: `POST http://SERVER_IP:8766/trade`
+
+The first WebSocket message must be:
+
+```json
+{"type":"auth","password":"YOUR_PASSWORD"}
+```
+
+A successful authentication returns:
+
+```json
+{"type":"auth_ok","timestamp":"..."}
+```
+
+See `SECURITY_AUDIT.md` for the removed files and security findings.
